@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Task API — Demo Console</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --panel:#171a21;
+    --panel-border:#262b35;
+    --text:#e8eaed;
+    --muted:#8b93a3;
+    --accent:#4f8cff;
+    --accent-dim:#2c4a82;
+    --ok:#3ecf8e;
+    --err:#ff5d5d;
+    --mono:'JetBrains Mono','SF Mono',Consolas,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--text);
+    font-family:var(--sans); min-height:100vh;
+  }
+  header{
+    padding:20px 28px; border-bottom:1px solid var(--panel-border);
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  header h1{ font-size:16px; font-weight:600; letter-spacing:.3px; margin:0; }
+  header h1 span{ color:var(--accent); font-family:var(--mono); }
+  #whoami{ font-size:13px; color:var(--muted); font-family:var(--mono); }
+  #whoami b{ color:var(--text); }
+  main{ max-width:920px; margin:0 auto; padding:28px; }
+  .card{
+    background:var(--panel); border:1px solid var(--panel-border);
+    border-radius:10px; padding:22px; margin-bottom:18px;
+  }
+  .card h2{ font-size:14px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--muted); margin:0 0 16px; font-weight:600; }
+  label{ display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  input, select, textarea{
+    width:100%; background:#0d0f14; border:1px solid var(--panel-border);
+    color:var(--text); padding:9px 11px; border-radius:6px; font-size:14px;
+    font-family:var(--sans); margin-bottom:12px;
+  }
+  input:focus, textarea:focus, select:focus{ outline:none; border-color:var(--accent); }
+  .row{ display:flex; gap:12px; }
+  .row > *{ flex:1; }
+  button{
+    background:var(--accent); color:#fff; border:none; padding:9px 16px;
+    border-radius:6px; font-size:13px; font-weight:600; cursor:pointer;
+  }
+  button:hover{ background:#3f7ae0; }
+  button.secondary{ background:transparent; border:1px solid var(--panel-border); color:var(--text); }
+  button.secondary:hover{ border-color:var(--accent); }
+  button.danger{ background:transparent; border:1px solid var(--err); color:var(--err); padding:5px 10px; font-size:12px; }
+  .msg{ font-size:13px; padding:10px 12px; border-radius:6px; margin-bottom:14px; font-family:var(--mono); display:none; }
+  .msg.ok{ background:rgba(62,207,142,.12); color:var(--ok); border:1px solid rgba(62,207,142,.3); display:block; }
+  .msg.err{ background:rgba(255,93,93,.12); color:var(--err); border:1px solid rgba(255,93,93,.3); display:block; }
+  #authView, #appView{ display:none; }
+  .tabs{ display:flex; gap:6px; margin-bottom:18px; }
+  .tabs button{ background:transparent; color:var(--muted); border:1px solid var(--panel-border); }
+  .tabs button.active{ background:var(--accent-dim); color:#fff; border-color:var(--accent); }
+  .task{
+    border:1px solid var(--panel-border); border-radius:8px; padding:14px;
+    margin-bottom:10px; display:flex; justify-content:space-between; gap:10px; align-items:flex-start;
+  }
+  .task .title{ font-weight:600; font-size:14px; }
+  .task .desc{ color:var(--muted); font-size:13px; margin-top:4px; }
+  .badge{
+    font-size:11px; font-family:var(--mono); padding:2px 8px; border-radius:20px;
+    border:1px solid var(--panel-border); color:var(--muted); text-transform:uppercase;
+  }
+  .badge.pending{ color:#e0b93e; border-color:#e0b93e44; }
+  .badge.in_progress{ color:var(--accent); border-color:var(--accent-dim); }
+  .badge.completed{ color:var(--ok); border-color:#3ecf8e44; }
+  .task-meta{ display:flex; gap:8px; align-items:center; margin-top:6px; }
+  .empty{ color:var(--muted); font-size:13px; text-align:center; padding:24px; font-family:var(--mono); }
+  footer{ text-align:center; color:var(--muted); font-size:12px; padding:24px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Task API <span>console</span></h1>
+  <div id="whoami"></div>
+</header>
+
+<main>
+
+  <!-- AUTH VIEW -->
+  <div id="authView">
+    <div class="card">
+      <div class="tabs">
+        <button id="tabLogin" class="active">Log in</button>
+        <button id="tabRegister">Register</button>
+      </div>
+
+      <div id="authMsg" class="msg"></div>
+
+      <form id="loginForm">
+        <label>Email</label>
+        <input type="email" id="loginEmail" required placeholder="you@example.com" />
+        <label>Password</label>
+        <input type="password" id="loginPassword" required placeholder="••••••••" />
+        <button type="submit">Log in</button>
+      </form>
+
+      <form id="registerForm" style="display:none">
+        <label>Name</label>
+        <input type="text" id="regName" required placeholder="Jane Doe" />
+        <label>Email</label>
+        <input type="email" id="regEmail" required placeholder="you@example.com" />
+        <label>Password</label>
+        <input type="password" id="regPassword" required placeholder="min. 8 chars, 1 number" />
+        <button type="submit">Create account</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- APP VIEW -->
+  <div id="appView">
+    <div class="card">
+      <h2>New task</h2>
+      <div id="taskMsg" class="msg"></div>
+      <form id="taskForm">
+        <label>Title</label>
+        <input type="text" id="taskTitle" required placeholder="What needs doing?" />
+        <label>Description</label>
+        <textarea id="taskDesc" rows="2" placeholder="Optional details"></textarea>
+        <div class="row">
+          <div>
+            <label>Status</label>
+            <select id="taskStatus">
+              <option value="pending">Pending</option>
+              <option value="in_progress">In progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button type="submit" style="width:100%">Add task</button>
+          </div>
+        </div>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Your tasks <span id="taskCount" style="color:var(--text)"></span></h2>
+      <div id="taskList"></div>
+    </div>
+
+    <button class="secondary" id="logoutBtn">Log out</button>
+  </div>
+
+</main>
+
+<footer>Backend Developer Intern Assignment — Auth + RBAC + CRUD demo</footer>
+
+<script src="client.js"></script>
+</body>
+</html>

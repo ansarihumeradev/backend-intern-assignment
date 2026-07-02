@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  api:
+    build: .
+    ports:
+      - "5000:5000"
+    environment:
+      PORT: 5000
+      MONGODB_URI: mongodb://db:27017/rbac_api_db
+      JWT_SECRET: change_this_secret
+      JWT_EXPIRES_IN: 30m
+      JWT_REFRESH_SECRET: change_this_refresh_secret
+      JWT_REFRESH_EXPIRES_IN: 7d
+    depends_on:
+      - db
+
+  db:
+    image: mongo:7
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodata:/data/db
+
+volumes:
+  mongodata:
